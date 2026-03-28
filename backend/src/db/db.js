@@ -1,17 +1,23 @@
 // db.js
 import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
-// Keeping your custom output path
-import { PrismaClient } from "../generated/prisma/client.ts"; 
+import { PrismaClient } from "@prisma/client";
 import "dotenv/config";
+
 const connectionString = process.env.DATABASE_URL;
 
 if (!connectionString) {
   throw new Error("DATABASE_URL is not set in your .env file");
 }
 
-const pool = new Pool({ connectionString });
+// FIX: Added ssl configuration here!
+const pool = new Pool({ 
+  connectionString,
+  ssl: {
+    rejectUnauthorized: false // Required by Supabase for external connections
+  }
+});
+
 const adapter = new PrismaPg(pool);
 
-// Export 'prisma' so we can import it anywhere in our app
 export const prisma = new PrismaClient({ adapter });

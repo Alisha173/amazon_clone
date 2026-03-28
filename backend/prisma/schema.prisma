@@ -4,10 +4,193 @@
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
   provider  = "postgresql"
+}
+
+// MODELS
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  cart      Cart?    // A user has one cart
+  orders    Order[]  // A user can have many orders
+  wishlist  Wishlist? 
+}
+
+model Category {
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdAt DateTime @default(now())
+
+  // Self-relation for subcategories
+  parentId  Int?
+  parent    Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children  Category[] @relation("CategoryHierarchy")
+  
+  products  Product[]
+
+  // THE FIX: Name must be unique, but only within the same parent level.
+  // This allows "Accessories" under Electronics AND "Accessories" under Clothing,
+  // but prevents two "Electronics" at the top level.
+  @@unique([name, parentId])
+}
+
+model Brand {
+  id        Int       @id @default(autoincrement())
+  name      String
+
+  products  Product[]
+}
+
+model Seller {
+  id        Int       @id @default(autoincrement())
+  name      String
+  email     String    @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  
+  products  Product[]
+}
+
+model Product {
+  id              Int      @id @default(autoincrement())
+  name            String
+  description     String
+  price           Decimal  @db.Decimal(10, 2)
+  stock           Int
+  isFeatured      Boolean  @default(false)
+  popularityScore Int      @default(0)
+  averageRating   Decimal  @default(0.0) @db.Decimal(3, 2)
+  ratingCount     Int      @default(0)
+  discountPercent Int      @default(0)
+  discountedPrice Decimal? @db.Decimal(10, 2)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Foreign Keys
+  categoryId Int
+  sellerId   Int
+  brandId    Int
+
+  // Relationships
+  category      Category       @relation(fields: [categoryId], references: [id])
+  seller        Seller         @relation(fields: [sellerId], references: [id])
+  brand         Brand          @relation(fields: [brandId], references: [id])
+  images        ProductImage[]
+  cartItems     CartItem[]
+  orderItems    OrderItem[]
+  wishlistItems WishlistItem[]
+}
+
+model ProductImage {
+  id        Int     @id @default(autoincrement())
+  imageUrl  String
+  position  Int     @default(0)
+  isPrimary Boolean @default(false)
+
+  // Foreign Key
+  productId Int
+
+  // Relationships
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model Cart {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Foreign Key
+  userId    Int      @unique
+
+  // Relationships
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
+}
+
+model CartItem {
+  id        Int      @id @default(autoincrement())
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Foreign Keys
+  cartId    Int
+  productId Int
+
+  // Relationships
+  cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  // Ensure a specific product is only added once per cart (quantity dictates amount)
+  @@unique([cartId, productId])
+}
+
+model Order {
+  id           Int      @id @default(autoincrement())
+  totalAmount  Decimal  @db.Decimal(10, 2)
+  status       String   @default("PENDING")
+  
+  // Updated Address Fields
+  addressLine1 String   @db.Text
+  city         String
+  state        String
+  pincode      String
+  
+  createdAt    DateTime @default(now())
+
+  userId       Int
+  user         User        @relation(fields: [userId], references: [id])
+  items        OrderItem[]
+}
+
+model OrderItem {
+  id        Int     @id @default(autoincrement())
+  quantity  Int
+  price     Decimal @db.Decimal(10, 2) // Storing price at time of purchase
+
+  // Foreign Keys
+  orderId   Int
+  productId Int
+
+  // Relationships
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id])
+}
+
+model Wishlist {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+
+  // Foreign Key
+  userId    Int      @unique
+
+  // Relationships
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     WishlistItem[]
+}
+
+model WishlistItem {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+
+  // Foreign Keys
+  wishlistId Int
+  productId  Int
+
+  // Relationships
+  wishlist   Wishlist @relation(fields: [wishlistId], references: [id], onDelete: Cascade)
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([wishlistId, productId])
 }
