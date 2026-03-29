@@ -10,16 +10,16 @@ const Home = () => {
 
   const isSearching = searchQuery || categoryId;
 
-  // If searching, pass the params object. Otherwise, fetch trending.
+  // UPDATED: Now fetches all products by default if not searching
   const { data, isLoading, error } = useQuery({
     queryKey: ['products', searchQuery, categoryId],
     queryFn: () => isSearching 
       ? productService.getProducts({ search: searchQuery, category_id: categoryId })
-      : productService.getTrending()
+      : productService.getProducts() // Changed from getTrending to getProducts
   });
 
-  // Your backend getProducts returns { products: [...] }, but getTrending returns an array directly.
-  const productsList = isSearching ? data?.products : data;
+  // Since both calls now use getProducts, the data structure is consistent { products: [...] }
+  const productsList = data?.products || [];
 
   if (isLoading) return <div className="p-10 text-center">Loading amazing deals...</div>;
   if (error) return <div className="p-10 text-center text-red-500">Error loading products.</div>;
@@ -36,18 +36,28 @@ const Home = () => {
             </h2>
           </div>
         ) : (
-          <div className="bg-blue-200 h-64 mb-6 rounded-md flex items-center justify-center">
-            <h2 className="text-4xl font-bold text-gray-800">Big Deals Start Here</h2>
+          /* Amazon-style Hero Banner */
+          <div className="relative mb-6">
+             <div className="absolute w-full h-32 bg-gradient-to-t from-[#EAEDED] to-transparent bottom-0 z-20" />
+             <img 
+               src="https://m.media-amazon.com/images/I/61lwJy4B8PL._SX3000_.jpg" 
+               alt="Hero" 
+               className="w-full h-[300px] object-cover z-10"
+             />
+             <div className="absolute top-10 left-10 z-30">
+                <h2 className="text-4xl font-extrabold text-gray-800">Big Deals Start Here</h2>
+                <p className="text-lg text-gray-700 mt-2">Explore our full catalog of amazing products.</p>
+             </div>
           </div>
         )}
 
         {/* Product Grid */}
         {productsList?.length === 0 ? (
           <div className="bg-white p-10 text-center text-lg rounded-sm border border-gray-200 shadow-sm">
-            No products match your search. Try checking your spelling or using more general terms.
+            No products found. Try adjusting your filters.
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 relative z-30">
             {productsList?.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
