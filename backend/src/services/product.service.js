@@ -21,7 +21,30 @@ export const getAllProducts = async (filters) => {
   if (search) {
     where.name = { contains: search, mode: "insensitive" };
   }
-  if (category_id) where.categoryId = parseInt(category_id);
+  if (category_id) {
+    const targetCatId = parseInt(category_id);
+    
+    // 1. Check if this category has any subcategories
+    const category = await prisma.category.findUnique({
+      where: { id: targetCatId },
+      include: { children: { select: { id: true } } }
+    });
+
+    if (category && category.children.length > 0) {
+      // 2. If it's a Parent Category (like "Electronics"), get all child IDs
+      const allRelatedIds = [
+        targetCatId, 
+        ...category.children.map(child => child.id)
+      ];
+      
+      // Tell Prisma to find products in ANY of these categories
+      where.categoryId = { in: allRelatedIds };
+    } else {
+      // 3. If it's a Subcategory (like "Mobiles"), just do a strict match
+      where.categoryId = targetCatId;
+    }
+  }
+  
   if (brand_id) where.brandId = parseInt(brand_id);
   if (seller_id) where.sellerId = parseInt(seller_id);
   

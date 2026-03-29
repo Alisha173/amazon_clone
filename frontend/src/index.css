@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+@theme {
+  /* Defining our custom Amazon color palette */
+  --color-amazon-background: #EAEDED;
+  --color-amazon-light-blue: #232F3A;
+  --color-amazon-yellow: #FEBD69;
+  --color-amazon-default: #131921;
+}
+
+body {
+  background-color: var(--color-amazon-background);
+}
