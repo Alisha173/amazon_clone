@@ -2,7 +2,7 @@
 
 ## 📌 Introduction
 
-This project is a fullstack **E-Commerce Web Application** built as part of an SDE Intern assessment. It replicates the core functionality and user experience of Amazon, including product browsing, cart management, and order placement.
+This project is a fullstack **E-Commerce Web Application**. It replicates the core functionality and user experience of Amazon, including product browsing, cart management, and order placement.
 
 The application is designed with a focus on:
 
@@ -111,6 +111,7 @@ DIRECT_URL=your_direct_url
 ```bash
 npx prisma generate
 npx prisma migrate dev
+node prisma/seed.js
 ```
 
 #### Run Backend

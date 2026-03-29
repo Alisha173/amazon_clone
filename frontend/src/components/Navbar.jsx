@@ -55,11 +55,14 @@ const Navbar = () => {
         </Link>
 
         {/* Deliver To */}
-        <div className="hidden md:flex flex-col items-start border border-transparent hover:border-white p-1 cursor-pointer">
-            <span className="text-[12px] text-gray-300 leading-none ml-5">Deliver to</span>
-            <div className="flex items-center">
-            <MapPin size={15} className="font-bold" />
-            <span className="text-[14px] font-bold leading-none">India</span>
+        <div className="hidden md:flex items-end border border-transparent hover:border-white p-1 cursor-pointer">
+            {/* Map Pin Icon aligned to the bottom */}
+            <MapPin size={18} className="mr-0.5 pb-0.5" />
+            
+            {/* Text Column */}
+            <div className="flex flex-col items-start">
+                <span className="text-[12px] text-gray-300 leading-none mb-1">Deliver to</span>
+                <span className="text-[14px] font-bold leading-none">India</span>
             </div>
         </div>
 
@@ -105,11 +108,16 @@ const Navbar = () => {
                 <p className="text-[12px] leading-none mb-1">Returns</p>
                 <p className="text-[14px] font-bold leading-none">& Orders</p>
             </Link>
-            <Link to="/cart" className="flex items-end border border-transparent hover:border-white p-1 relative">
-                <ShoppingCart size={32} />
-                <span className="absolute top-0 right-[32px] font-bold text-[#F3A847] text-lg">{cartItemCount}</span>
-                <p className="font-bold text-[14px] mt-4 ml-1">Cart</p>
-            </Link>
+            <Link to="/cart" className="flex items-end border border-transparent hover:border-white p-2">
+            <div className="relative">
+                {/* The number is now absolutely positioned relative to just the cart icon */}
+                <span className="absolute -top-2 left-[10px] w-6 text-center font-bold text-[#F3A847] text-lg">
+                    {cartItemCount}
+                </span>
+                <ShoppingCart size={34} />
+            </div>
+            <p className="font-bold text-[14px] mb-1 ml-1">Cart</p>
+        </Link>
         </div>
         </div>
 
