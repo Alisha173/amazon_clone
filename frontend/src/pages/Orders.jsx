@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import { orderService } from '../api/orderService';
-import { productService } from '../api/productService';
+import { apiClient } from '../api/client';
 
 const Orders = () => {
   // Fetch the user's past orders
@@ -11,17 +11,26 @@ const Orders = () => {
     queryFn: orderService.getUserOrders
   });
 
-  // Fetch featured products for the Sidebar and Carousel
-  const { data: featuredData } = useQuery({
-    queryKey: ['featuredProducts'],
-    queryFn: productService.getFeatured
+  // Fetch ALL products instead of featured ones
+  const { data: productsData, isLoading: loadingProducts } = useQuery({
+    queryKey: ['products'],
+    queryFn: async () => {
+      const { data } = await apiClient.get('/products'); 
+      return data;
+    }
   });
 
-  // Ensure we have an array to map over
-  const orders = Array.isArray(ordersData) ? ordersData : ordersData?.orders || [];
-  const featuredProducts = Array.isArray(featuredData) ? featuredData : featuredData?.products || [];
+  // Show a loading screen if EITHER orders or products are still fetching
+  if (loadingOrders || loadingProducts) {
+    return <div className="p-10 text-center text-xl">Loading your orders...</div>;
+  }
 
-  if (loadingOrders) return <div className="p-10 text-center text-xl">Loading your orders...</div>;
+  // Safely ensure we have arrays to map over
+  const orders = Array.isArray(ordersData) ? ordersData : ordersData?.orders || [];
+  
+  // Safely extract the products array and grab the first 8 items
+  const allProducts = Array.isArray(productsData) ? productsData : productsData?.products || productsData?.data || [];
+  const recommendedProducts = allProducts.slice(0, 8);
 
   return (
     <div className="bg-white min-h-screen font-sans pb-10">
@@ -40,12 +49,23 @@ const Orders = () => {
               <h1 className="text-3xl font-normal">Your Orders</h1>
               
               {/* Dummy Search Bar */}
-              <div className="hidden sm:flex items-center border border-gray-400 rounded-md overflow-hidden h-8 w-64 shadow-sm">
-                <div className="px-2 text-gray-500 bg-[#F3F3F3] border-r border-gray-400 h-full flex items-center justify-center">
-                  <Search size={16} />
+              <div className="hidden sm:flex items-stretch border border-gray-400 rounded-md overflow-hidden h-[34px] w-auto shadow-sm">
+                {/* Search Icon */}
+                <div className="px-3 text-gray-500 bg-[#F3F3F3] border-r border-gray-400 flex items-center justify-center">
+                  <Search size={18} />
                 </div>
-                <input type="text" placeholder="Search all orders" className="flex-grow px-2 text-sm outline-none" />
-                <button className="bg-gray-800 text-white px-3 text-sm h-full hover:bg-gray-700">Search Orders</button>
+                
+                {/* Input Field */}
+                <input 
+                  type="text" 
+                  placeholder="Search all orders" 
+                  className="flex-grow px-3 text-sm outline-none min-w-[200px]" 
+                />
+                
+                {/* Button */}
+                <button className="bg-[#232F3E] text-white px-4 text-sm font-medium hover:bg-[#37475A] transition-colors flex items-center justify-center">
+                  Search Orders
+                </button>
               </div>
             </div>
 
@@ -112,10 +132,10 @@ const Orders = () => {
                             </Link>
                             <p className="text-xs text-gray-500 mt-1">Sold by: Cocoblu Retail</p>
                             <div className="mt-2 space-x-2">
-                              <button className="bg-[#FFD814] hover:bg-[#F7CA00] border border-[#FCD200] px-3 py-1.5 rounded-full text-sm shadow-sm">
+                              <button className="bg-[#FFD814] hover:bg-[#F7CA00] border border-[#FCD200] px-3 py-1.5 rounded-full text-sm shadow-sm cursor-pointer">
                                 Track package
                               </button>
-                              <button className="border border-[#D5D9D9] hover:bg-gray-50 px-3 py-1.5 rounded-full text-sm shadow-sm">
+                              <button className="border border-[#D5D9D9] hover:bg-gray-50 px-3 py-1.5 rounded-full text-sm shadow-sm cursor-pointer">
                                 View your item
                               </button>
                             </div>
@@ -134,7 +154,8 @@ const Orders = () => {
             <div className="border border-[#D5D9D9] rounded-lg p-4 sticky top-4">
               <h3 className="font-bold text-base mb-4 text-center">Recommended for you</h3>
               <div className="space-y-4">
-                {featuredProducts.slice(0, 4).map(product => (
+                {/* Grab the first 4 for the sidebar */}
+                {recommendedProducts.slice(0, 4).map(product => (
                   <Link to={`/product/${product.id}`} key={product.id} className="flex gap-3 group">
                     <img src={product.images?.[0]?.imageUrl || 'https://placehold.co/50'} alt={product.name} className="w-16 h-16 object-contain" />
                     <div>
@@ -155,7 +176,8 @@ const Orders = () => {
         <div className="mt-12 border-t border-gray-200 pt-6">
           <h2 className="text-xl font-bold mb-4">Keep shopping for</h2>
           <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-            {featuredProducts.map(product => (
+            {/* Show all 8 recommended products in the carousel */}
+            {recommendedProducts.map(product => (
               <Link to={`/product/${product.id}`} key={product.id} className="min-w-[160px] max-w-[160px] group flex flex-col items-center">
                 <div className="h-32 flex items-center justify-center mb-2">
                   <img src={product.images?.[0]?.imageUrl || 'https://placehold.co/100'} alt={product.name} className="max-h-full object-contain mix-blend-multiply" />
