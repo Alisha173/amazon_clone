@@ -12,13 +12,12 @@ const Checkout = () => {
   
   const buyNowItem = location.state?.buyNowItem;
 
-  // We keep this state so the backend still receives valid data, 
-  // even though the UI looks like a static summary.
-  const [formData] = useState({
-    addressLine1: '575/1, Vrindavan Gardens, KADUNGALLOOR',
-    city: 'Ernakulam',
-    state: 'KERALA',
-    pincode: '683110'
+  // State is now pre-filled with the Scaler address but remains fully editable
+  const [formData, setFormData] = useState({
+    addressLine1: '14, 3rd cross, Parappana Agrahar, Electronic City Phase 1',
+    city: 'Bengaluru',
+    state: 'Karnataka',
+    pincode: '560100'
   });
 
   const { data: cartData, isLoading } = useQuery({
@@ -38,8 +37,13 @@ const Checkout = () => {
     }
   });
 
+  // Handle typing in the input fields
+  const handleInputChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
   const handleSubmit = (e) => {
-    e?.preventDefault();
+    e?.preventDefault(); // Prevent page reload
     const payload = { ...formData };
     if (buyNowItem) {
       payload.productId = buyNowItem.productId;
@@ -56,14 +60,12 @@ const Checkout = () => {
     ? (buyNowItem.price * buyNowItem.quantity) 
     : (cartData?.summary?.total || 0);
 
-  // Static fees to match screenshot
   const deliveryFee = 79;
   const codFee = 14;
-  const orderTotal = Number(itemsTotal) + codFee; // Free delivery cancels the delivery fee
+  const orderTotal = Number(itemsTotal) + codFee; 
 
   if (!buyNowItem && isLoading) return <div className="p-10 text-center">Loading checkout...</div>;
 
-  // Helper to render either the single item or the cart items
   const productsToRender = buyNowItem 
     ? [{ 
         product: { 
@@ -92,50 +94,51 @@ const Checkout = () => {
         {/* LEFT SIDE: Main Content */}
         <div className="md:w-[70%] space-y-4">
           
-          {/* 1. Address Block */}
-          <div className="border border-gray-300 rounded-md p-4 flex justify-between items-start">
-            <div>
-              <h2 className="text-lg font-bold">Delivering to Alisha Ameer</h2>
-              <p className="text-sm text-gray-800 mt-1">575/1, Vrindavan Gardens, KADUNGALLOOR, KERALA, 683110, India</p>
-              <p className="text-sm text-blue-600 hover:underline cursor-pointer mt-2">Add delivery instructions</p>
-            </div>
-            <span className="text-sm text-blue-600 hover:underline cursor-pointer">Change</span>
+          {/* 1. ACTUAL ADDRESS FORM */}
+          <div className="border border-gray-300 rounded-md p-6 bg-white">
+            <h2 className="text-xl font-bold mb-4 text-[#C45500]">1. Delivery address</h2>
+            <form id="checkout-form" onSubmit={handleSubmit} className="space-y-4 max-w-lg">
+              <div>
+                <label className="block text-sm font-bold mb-1">Street Address</label>
+                <input required type="text" name="addressLine1" value={formData.addressLine1} onChange={handleInputChange} className="w-full border border-gray-400 rounded p-2 text-sm focus:border-orange-500 outline-none shadow-sm transition-colors" />
+              </div>
+              <div className="flex gap-4">
+                <div className="flex-1">
+                  <label className="block text-sm font-bold mb-1">City</label>
+                  <input required type="text" name="city" value={formData.city} onChange={handleInputChange} className="w-full border border-gray-400 rounded p-2 text-sm focus:border-orange-500 outline-none shadow-sm transition-colors" />
+                </div>
+                <div className="flex-1">
+                  <label className="block text-sm font-bold mb-1">State</label>
+                  <input required type="text" name="state" value={formData.state} onChange={handleInputChange} className="w-full border border-gray-400 rounded p-2 text-sm focus:border-orange-500 outline-none shadow-sm transition-colors" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-bold mb-1">Pincode</label>
+                <input required type="text" name="pincode" value={formData.pincode} onChange={handleInputChange} className="w-1/2 border border-gray-400 rounded p-2 text-sm focus:border-orange-500 outline-none shadow-sm transition-colors" />
+              </div>
+            </form>
           </div>
 
-          {/* 2. Payment Block */}
+          {/* 2. Payment Block (Static) */}
           <div className="border border-gray-300 rounded-md p-4 flex justify-between items-start">
             <div>
               <h2 className="text-lg font-bold">Pay on delivery (Cash/Card)</h2>
               <p className="text-sm text-blue-600 hover:underline cursor-pointer mt-2">Use a gift card, voucher or promo code</p>
             </div>
-            <span className="text-sm text-blue-600 hover:underline cursor-pointer">Change</span>
           </div>
 
-          {/* 3. Diamonds Block */}
-          <div className="border border-gray-300 rounded-md p-4">
-            <h2 className="text-lg font-bold mb-2">Use your Diamonds</h2>
-            <div className="flex items-center gap-2 text-sm">
-              <input type="checkbox" className="w-4 h-4" />
-              <span><span className="bg-green-700 text-white px-1 text-xs font-bold rounded-sm">Save ₹23</span> extra using <Gem size={14} className="inline text-blue-500" fill="currentColor"/> 230</span>
-            </div>
-            <p className="text-sm text-orange-700 mt-2">⚠️ Change payment method to use Diamonds</p>
-          </div>
-
-          {/* 4. Review Items Block */}
-          <div className="border border-gray-300 rounded-md overflow-hidden">
+          {/* 3. Review Items Block */}
+          <div className="border border-gray-300 rounded-md overflow-hidden mt-4">
             <div className="p-4 border-b border-gray-200">
-              <h2 className="text-xl font-bold">Arriving 30 Mar 2026</h2>
-              <p className="text-sm text-gray-600 mt-1">If you order in the next 12 hours and 14 minutes</p>
+              <h2 className="text-xl font-bold text-[#C45500]">2. Review items and shipping</h2>
             </div>
 
             {productsToRender.map((item, index) => (
               <div key={index} className="p-4 flex flex-col md:flex-row gap-6 border-b border-gray-200 last:border-0">
-                {/* Product Info */}
                 <div className="md:w-2/3 flex gap-4">
                   <img src={item.product.images?.[0]?.imageUrl || 'https://placehold.co/150'} alt="" className="w-20 h-24 object-contain" />
                   <div>
                     <p className="font-bold text-sm leading-tight">{item.product.name}</p>
-                    
                     {item.product.discountPercent > 0 && (
                       <div className="flex items-center gap-2 mt-2">
                         <span className="bg-[#CC0C39] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-sm">
@@ -144,73 +147,34 @@ const Checkout = () => {
                         <span className="text-[#CC0C39] text-xs font-bold">Limited time deal</span>
                       </div>
                     )}
-
                     <p className="font-bold mt-1">₹{Number(item.product.discountedPrice || item.product.price).toLocaleString('en-IN')}</p>
-                    
-                    <div className="text-xs text-gray-600 mt-1 space-y-0.5">
-                      <p>Ships from Amazon <span className="bg-gray-700 text-white px-1 font-bold rounded-sm text-[10px]">Fulfilled</span></p>
-                      <p>Sold by <span className="text-blue-600 hover:underline cursor-pointer">Cocoblu Retail</span></p>
-                    </div>
-
-                    {/* Quantity Pill Match */}
-                    <div className="flex items-center border border-gray-300 rounded-full shadow-sm bg-[#F0F2F2] w-fit mt-3">
-                      <button className="p-1.5 hover:bg-gray-200 text-black rounded-l-full">
-                        <Trash2 size={14} />
-                      </button>
-                      <span className="px-3 py-0.5 bg-white text-sm font-semibold border-x border-gray-300">
-                        {item.quantity}
-                      </span>
-                      <button className="p-1.5 hover:bg-gray-200 text-black rounded-r-full">
-                        <Plus size={14} />
-                      </button>
-                    </div>
-
-                    <p className="text-sm text-blue-600 hover:underline cursor-pointer mt-3">Add gift options</p>
+                    <p className="text-xs text-gray-600 mt-1">Sold by <span className="text-blue-600 hover:underline cursor-pointer">Cocoblu Retail</span></p>
+                    <p className="text-xs mt-2 font-bold">Quantity: {item.quantity}</p>
                   </div>
                 </div>
 
-                {/* Delivery Option */}
                 <div className="md:w-1/3 text-sm">
                   <div className="flex items-start gap-2">
                     <input type="radio" checked readOnly className="mt-1" />
                     <div>
-                      <p className="font-bold text-green-700">Tomorrow, 30 Mar</p>
+                      <p className="font-bold text-green-700">Standard Delivery</p>
                       <p className="text-gray-500 line-through">₹79 per unit</p>
-                      <p className="text-gray-800">FREE One-day delivery</p>
-                      <p className="text-gray-600 mt-1">PRIME DELIVERY UNLOCKED</p>
+                      <p className="text-gray-800">FREE delivery</p>
                     </div>
                   </div>
                 </div>
               </div>
             ))}
-            
-            <div className="p-4 bg-gray-50 text-xs text-gray-600">
-              Item often sent in manufacturer's box to reduce packaging and reveals what's inside. If this is a gift, consider sending to a different address.
-            </div>
           </div>
-
-          {/* Bottom Placement Box */}
-          <div className="border border-gray-300 rounded-md p-4 flex flex-col md:flex-row items-center gap-6">
-            <button 
-              onClick={handleSubmit}
-              disabled={checkoutMutation.isPending}
-              className="w-full md:w-auto px-8 bg-[#FFD814] hover:bg-[#F7CA00] py-2 rounded-full text-sm font-normal border border-[#FCD200] shadow-sm disabled:opacity-50"
-            >
-              {checkoutMutation.isPending ? 'Placing...' : 'Place your order'}
-            </button>
-            <div>
-              <p className="text-lg font-bold text-[#B12704]">Order Total: ₹{Number(orderTotal).toLocaleString('en-IN')}</p>
-              <p className="text-xs text-gray-600 mt-1">By placing your order, you agree to Amazon's <span className="text-blue-600 hover:underline">privacy notice</span> and <span className="text-blue-600 hover:underline">conditions of use</span>.</p>
-            </div>
-          </div>
-
         </div>
 
         {/* RIGHT SIDE: Summary Sticky Sidebar */}
         <div className="md:w-[30%]">
           <div className="border border-gray-300 rounded-md p-4 sticky top-4 bg-white">
+            {/* IMPORTANT: form="checkout-form" allows this button to submit the form in the left column */}
             <button 
-              onClick={handleSubmit}
+              form="checkout-form"
+              type="submit"
               disabled={checkoutMutation.isPending || totalItems === 0}
               className="w-full bg-[#FFD814] hover:bg-[#F7CA00] py-2 rounded-full text-sm font-normal border border-[#FCD200] shadow-sm mb-3 transition-all disabled:opacity-50"
             >
@@ -249,11 +213,6 @@ const Checkout = () => {
                 <span>Order Total:</span>
                 <span>₹{Number(orderTotal).toLocaleString('en-IN')}</span>
               </div>
-            </div>
-
-            <div className="mt-4 pt-4 border-t border-gray-200 flex justify-between items-center text-xs">
-              <span>Diamonds earned:</span>
-              <span className="font-bold"><Gem size={12} className="inline text-blue-500 mb-0.5" fill="currentColor"/> 155</span>
             </div>
           </div>
         </div>

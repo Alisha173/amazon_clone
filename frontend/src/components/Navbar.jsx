@@ -95,14 +95,16 @@ const Navbar = () => {
 
         {/* Right Nav Items */}
         <div className="flex items-center gap-4 px-2">
-            <div className="border border-transparent hover:border-white p-1 cursor-pointer">
-            <p className="text-[12px]">Hello, sign in</p>
-            <p className="text-[14px] font-bold">Account & Lists</p>
+            <div className="border border-transparent hover:border-white p-1 cursor-pointer flex flex-col items-start justify-center">
+                <p className="text-[12px] leading-none mb-1">Hello, Scaler</p>
+                <p className="text-[14px] font-bold leading-none flex items-center gap-1">
+                Account & Lists <span className="text-gray-400 text-[10px] mt-0.5">▼</span>
+                </p>
             </div>
-            <div className="border border-transparent hover:border-white p-1 cursor-pointer">
-            <p className="text-[12px]">Returns</p>
-            <p className="text-[14px] font-bold">& Orders</p>
-            </div>
+            <Link to="/orders" className="border border-transparent hover:border-white p-1 cursor-pointer flex flex-col justify-center">
+                <p className="text-[12px] leading-none mb-1">Returns</p>
+                <p className="text-[14px] font-bold leading-none">& Orders</p>
+            </Link>
             <Link to="/cart" className="flex items-end border border-transparent hover:border-white p-1 relative">
                 <ShoppingCart size={32} />
                 <span className="absolute top-0 right-[32px] font-bold text-[#F3A847] text-lg">{cartItemCount}</span>

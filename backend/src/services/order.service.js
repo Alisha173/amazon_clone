@@ -104,3 +104,31 @@ export const placeOrder = async (orderData) => {
     type: "CART_CHECKOUT" 
   };
 };
+
+
+export const getUserOrders = async () => {
+  const userId = 1; 
+
+  const orders = await prisma.order.findMany({
+    where: { 
+      userId: userId 
+    },
+    include: {
+      items: {
+        include: {
+          product: {
+            // FIX: We must explicitly tell Prisma to fetch the nested images!
+            include: {
+              images: true 
+            }
+          }
+        }
+      }
+    },
+    orderBy: {
+      createdAt: 'desc' 
+    }
+  });
+
+  return orders;
+};
